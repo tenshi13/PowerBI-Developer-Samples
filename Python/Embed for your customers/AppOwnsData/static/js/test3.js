@@ -217,35 +217,35 @@ $(function () {
         // only do this if report is rendered
         if(is_report_rendered && pbie_report.slicers) {
 
-            // the filter is created as an object property 'filters' and is an array of filters
+            // diff with slicer is that, its not in an object of array, see test2
             const advancedFilterState = {
-                filters: [{
-                    $schema: "http://powerbi.com/product/schema#advanced",
-                    target: {
-                        table: "dates_months",
-                        column: "YYYYMM_id"
+                $schema: "http://powerbi.com/product/schema#advanced",
+                target: {
+                    table: "dates_months",
+                    column: "YYYYMM_id"
+                },
+                logicalOperator: "Between",
+                conditions: [
+                    {
+                        operator: "GreaterThanOrEqual",
+                        value: YYYYMM_id[ $( "#start_yearmonth" ).val() ]
                     },
-                    logicalOperator: "Between",
-                    conditions: [
-                        {
-                            operator: "GreaterThanOrEqual",
-                            value: YYYYMM_id[ $( "#start_yearmonth" ).val() ]
-                        },
-                        {
-                            operator: "LessThanOrEqual",
-                            value: YYYYMM_id[ $( "#end_yearmonth" ).val() ]
-                        }
-                    ],
-                    filterType: 0// models.FilterType.AdvancedFilter
-                }]
+                    {
+                        operator: "LessThanOrEqual",
+                        value: YYYYMM_id[ $( "#end_yearmonth" ).val() ]
+                    }
+                ],
+                filterType: 0// models.FilterType.AdvancedFilter
             };
 
             console.log("Filter");
             console.log(advancedFilterState);
 
             // apply slicer?
-            // ref: https://github.com/Microsoft/PowerBI-JavaScript/wiki/Slicers
-            pbie_report.slicers[0].setSlicerState(advancedFilterState)
+            // ref: https://github.com/Microsoft/PowerBI-JavaScript/wiki/Filters
+            //      we can do report, page, visual level filters, have a read ^
+            //      but the gist is, we can do report/page level filters, without slicers
+            pbie_report.setFilters([advancedFilterState])
             .catch(errors => {
                 console.log("Err");
                 console.log(errors)

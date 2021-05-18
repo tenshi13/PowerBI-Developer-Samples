@@ -3,7 +3,6 @@
 
 // EH: very messy, for demo only
 var pbie_report = null;
-var pbie_slicer = null;
 var is_report_rendered = null;
 // EH: very messy, for demo only
 
@@ -25,7 +24,8 @@ $(function () {
         settings: {
             //background: models.BackgroundType.Transparent
             filterPaneEnabled: false,
-            navContentPaneEnabled: false
+            navContentPaneEnabled: false,
+            visualRenderedEvents: true
         }
         // EH: hiding report footer page tabs/navigation
     };
@@ -74,6 +74,8 @@ $(function () {
             report.on('pageChanged', event => {
                 const page = event.detail.newPage;
                 report.selectedPage = page;
+
+                console.log("Page changed event");
             });
             // EH: report page change event
 
@@ -82,42 +84,59 @@ $(function () {
                 console.log("Report render successful");
                 is_report_rendered = true;
 
-                if(report.selectedPage) {
-                    // ok let's set the page's slicer here
-                    report.slicers = [];
-                    report.selectedPage.getVisuals().then(function(visuals) {
-                        console.log("Listing all visual objects");
-                        console.log(visuals); // <---- this shows ALL visuals, uncomment to have a peek
-                        /**
-                         * Visual object, key properties:
-                         * - name  : visual ID
-                         * - title : title of the visual
-                         * - type  : type of visual - image, card, basicShape, actionButton
-                         */
-    
-                        // loop through and get the slicer ones
-                        for(var a=0; a<visuals.length; a++) {
-                            var cVisual = visuals[a];
-                            if(cVisual.type=='slicer') {
-                                report.slicers.push(cVisual);
-                            }
-                        }
-    
-                        // for our free report, we only have 1 slicer per `page`
-                        console.log(report.slicers);
-    
-                        // just printing the state of our slicers
-                        for(var a=0; a<report.slicers.length; a++) {
-                            var cSlicer = report.slicers[a];
-                            cSlicer.getSlicerState()
-                            .then(state => {
-                                console.log("Showing slicer state");
-                                console.log(state);
-                            });
-                        }
-                    });
-                }
+                report.getFilters().then(filters => {
+                    console.log("Current report filters : ");
+                    console.log(filters);
+                });      
             });
+
+            // EH: Testing other events
+            // ref: - https://github.com/Microsoft/PowerBI-JavaScript/wiki/Handling-Events
+            //      - https://docs.microsoft.com/en-us/javascript/api/overview/powerbi/handle-events
+            // EH: Not so sure how this triggered
+            report.on("buttonClicked", function (event) {
+                console.log("buttonClicked event");
+                console.log(event);
+            });
+
+            // EH: Not so sure how this triggered
+            report.on("commandTriggered", function (event) {
+                console.log("commandTriggered event");
+                console.log(event);
+            });
+
+            // EH: Not so sure how this triggered
+            report.on("dataHyperlinkClicked", function (event) {
+                console.log("dataHyperlinkClicked event");
+                console.log(event);
+            });
+
+            // this is the one we are after
+            report.on("dataSelected", function (event) {
+                console.log("dataSelected event");
+                console.log(event);
+            });
+
+            // EH: weird, gets triggered even I click on a visual but nothing changed
+            // report.on("selectionChanged", function (event) {
+            //     console.log("selectionChanged event");
+            //     console.log(event);
+            // });
+
+            // EH: gets triggered just as we click on the visual
+            // report.on("visualClicked", function (event) {
+            //     console.log("visualClicked event");
+            //     console.log(event);
+            // });
+
+            // EH: bit annoying, triggered on EACH visual
+            // report.on("visualRendered", function (event) {
+            //     // requires setting visualRenderedEvents to true in the settings
+            //     console.log("visualRendered event");
+            //     console.log(event);
+            // });
+
+            // EH: Testing other events
 
             // Clear any other error handler event
             report.off("error");
@@ -190,7 +209,7 @@ $(function () {
                 return false;
            } else {
                 $(this).datepicker('setDate', new Date(iYear, iMonth, 1));
-                oncalendar_select();
+                update_report_filters();
            }
         }
     };
@@ -203,6 +222,15 @@ $(function () {
         end_calendar_yearmonth_config['defaultDate'] = new Date(2021, 02, 01);
     $( "#end_yearmonth" ).datepicker(end_calendar_yearmonth_config);
 
+    $( "input[name='lga']").on("change", function(){
+        update_report_filters();
+    });
+
+    // just serializing the checkbox to arrays
+    var get_lgas = function() {
+        return $( "input[name='lga']:checked").map(function(){return $(this).val()}).get();
+    }
+
     // ref: 
     // - https://github.com/microsoft/PowerBI-JavaScript/wiki/Embed-Configuration-Details - report config
     // slicer
@@ -211,45 +239,81 @@ $(function () {
     // - https://github.com/Microsoft/PowerBI-JavaScript/wiki/Filters
     // - https://github.com/Microsoft/PowerBI-JavaScript/wiki/Filters#page-level-and-visual-level-filters
     // we create the slicer config object and update the report
-    var oncalendar_select = function() {
-        console.log( $( "#start_yearmonth" ).val() + " ~ " + $( "#end_yearmonth" ).val() );
+    var update_report_filters = function() {
+        // EH: GIST 
+        // - compile list of filters we want to apply, 
+        // - remove all filters on page or report, 
+        // - reapply new filter
+        // ^ from my understanding, the remove filter should be a seperate ajax, but it is VERY responsive
+        //   if that's the case it should be OK to do remove all and readd filters
+
+        console.log( "selected dates : " + $( "#start_yearmonth" ).val() + " ~ " + $( "#end_yearmonth" ).val() );
+        console.log( "selected lga : " );
+        console.log(get_lgas());
+
+        // EH: ***propose to keep a state of filters that we apply to the report on front end
+        let pbie_filters = [];
 
         // only do this if report is rendered
-        if(is_report_rendered && pbie_report.slicers) {
-
-            // the filter is created as an object property 'filters' and is an array of filters
-            const advancedFilterState = {
-                filters: [{
-                    $schema: "http://powerbi.com/product/schema#advanced",
-                    target: {
-                        table: "dates_months",
-                        column: "YYYYMM_id"
+        if(is_report_rendered) {
+            // diff with slicer is that, its not in an object of array, see test2
+            const dateFilter = {
+                $schema: "http://powerbi.com/product/schema#advanced",
+                target: {
+                    table: "dates_months",
+                    column: "YYYYMM_id"
+                },
+                logicalOperator: "Between",
+                conditions: [
+                    {
+                        operator: "GreaterThanOrEqual",
+                        value: YYYYMM_id[ $( "#start_yearmonth" ).val() ]
                     },
-                    logicalOperator: "Between",
-                    conditions: [
-                        {
-                            operator: "GreaterThanOrEqual",
-                            value: YYYYMM_id[ $( "#start_yearmonth" ).val() ]
-                        },
-                        {
-                            operator: "LessThanOrEqual",
-                            value: YYYYMM_id[ $( "#end_yearmonth" ).val() ]
-                        }
-                    ],
-                    filterType: 0// models.FilterType.AdvancedFilter
-                }]
+                    {
+                        operator: "LessThanOrEqual",
+                        value: YYYYMM_id[ $( "#end_yearmonth" ).val() ]
+                    }
+                ],
+                filterType: 0// models.FilterType.AdvancedFilter
             };
+            pbie_filters.push(dateFilter);
 
-            console.log("Filter");
-            console.log(advancedFilterState);
+            console.log("Date Filter");
+            console.log(dateFilter);
+        }
 
-            // apply slicer?
-            // ref: https://github.com/Microsoft/PowerBI-JavaScript/wiki/Slicers
-            pbie_report.slicers[0].setSlicerState(advancedFilterState)
+        if (is_report_rendered && get_lgas().length>0) {
+            geoFilter = {
+                $schema: "http://powerbi.com/product/schema#basic",
+                target: {
+                    table: "intelemap",
+                    column: "entity_intelemap_link_lga_name"
+                },
+                operator: "In",
+                values: get_lgas(),
+                filterType: 1 // pbi.models.FilterType.BasicFilter,
+            }
+            pbie_filters.push(geoFilter);
+
+            console.log("Geo Filter");
+            console.log(geoFilter);
+        }
+
+
+        // apply slicer?
+        // ref: https://github.com/Microsoft/PowerBI-JavaScript/wiki/Filters
+        //      we can do report, page, visual level filters, have a read ^
+        //      but the gist is, we can do report/page level filters, without slicers
+        if (pbie_filters.length > 0) {
+            // EH: removes all filter, suprisingly this does not lag??? :D
+            pbie_report.removeFilters(); 
+
+            pbie_report.setFilters(pbie_filters)
             .catch(errors => {
                 console.log("Err");
                 console.log(errors)
             });
         }
-    }
+    };
+
 });

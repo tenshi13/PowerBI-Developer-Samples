@@ -34,30 +34,27 @@ Licensed under the MIT license.
     <main class="row">
         <section id="text-container" class="embed-container col-lg-4 col-md-4 col-sm-4 mb-5 ml-5 mt-5">
             <div>
-                <p>This sample is developed using Flask framework.
-                    <br>
-                    In order to see a different report, make changes to the <i>config.py</i> file.
-                </p>
+                <h2>Interacting with Pbie events</h2>
                 <p>Code is present in the following files:
                     <ol>
-                        <li>test2.js</li>
-                        <li>test2.html</li>
+                        <li>test5.js</li>
+                        <li>test5.html</li>
                         <li>and what ever mentioned in index.html</li>
                     </ol>
                 </p>
-                <p>
-                    <h2>Js interactions with date sliders</h2>
-                    <p style="font-size:12pt">
-                        - we're testing js interaction with slicers on the report <br />
-                        - this code shows that we can change the slicer via js code externally <br />
-                    </p>
-                    <!-- EH: prototyping jquery ui calendar, talk to powerbi embed-->
-                    <div>
-                        Start Date : <input type="text" id="start_yearmonth" value="2019-01" /> <br />
-                        End Date : <input type="text" id="end_yearmonth" value="2021-03" />
-                    </div>
-                    <!-- EH: prototyping jquery ui calendar, talk to powerbi embed-->
-                </p>
+                <!-- EH: prototyping jquery ui calendar, talk to powerbi embed-->
+                <h3>Filters</h3>
+                <div>
+                    Start Date : <input type="text" id="start_yearmonth" value="2019-01" /> <br />
+                    End Date : <input type="text" id="end_yearmonth" value="2021-03" />
+                </div>
+                <div>
+                    LGA : <br />
+                    <input type="checkbox" name="lga" value="Sydney (C)" autocomplete="false" /> Sydney (C)<br />
+                    <input type="checkbox" name="lga" value="Fairfield (C)" autocomplete="false" /> Fairfield (C)<br />
+                    <input type="checkbox" name="lga" value="Penrith (C)" autocomplete="false" /> Penrith (C)<br />
+                </div>
+                <!-- EH: prototyping jquery ui calendar, talk to powerbi embed-->
             </div>
         </section>
         <section id="report-container" class="embed-container col-lg-offset-4 col-lg-7 col-md-offset-5 col-md-7 col-sm-offset-5 col-sm-7 mt-5">
@@ -66,6 +63,53 @@ Licensed under the MIT license.
         <!-- Used to display report embed error messages -->
         <section class="error-container m-5">
         </section>
+
+        <hr style="width: 100%;border: 1px solid black;" /> <br />
+        <div style="width: 80%; margin: auto; padding: auto">
+            <ul>
+                <li>we're testing pbie events</li>
+                <li>to see if we can get the event/object when user clicks on visuals</li>
+                <li>seems that `dataSelected` is the one we are after, triggered when user clicks visuals</li>
+                <li>the event object `dataSelected` returns a detail object that has this structure</li>
+            </ul>
+
+            <code style="white-space: pre;">
+                detail {
+                    dataPoints - object
+                    filters - empty array, useless?
+                    page - object ref
+                    regions - null, useless?
+                    report - object ref
+                    visual - object ref
+                }
+            </code>
+            of the details, dataPoints is the most useful, example values:<br />
+            <code style="white-space: pre;">
+                dataPoints [
+                    {
+                        values: - empty array, useless?
+                        identity: [
+                            {
+                                equals: 2021,
+                                target: {
+                                    coclumn: "year"
+                                    table: "flow_lga"
+                                }
+
+                            }
+                        ]
+                    }
+                ]
+            </code>
+            
+            <h2>Conclusion:</h2><br />
+            <ul>
+                <li>Getting user clicked event is doable, but its not ideal</li>
+                <li>Would propose to keep the year filters out of the individual visuals and have a signle place to apply filter</li>
+            </ul>
+            
+        </div>
+
     </main>
     <footer class="embed-container col-lg-12 col-md-12 col-sm-12 mb-0 mt-4">
         <p class="text-center">
@@ -79,7 +123,7 @@ Licensed under the MIT license.
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" integrity="sha384-w1Q4orYjBQndcko6MimVbzY0tgp4pWB4lZ7lr30WKz0vr/aWKhXdBNmNb5D92v7s" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/powerbi-client/2.15.1/powerbi.min.js" integrity="sha512-OWIl8Xrlo8yQjWN5LcMz5SIgNnzcJqeelChqPMIeQGnEFJ4m1fWWn668AEXBrKlsuVbvDebTUJGLRCtRCCiFkg==" crossorigin="anonymous"></script>
-    <script src="{{ url_for('static', filename='js/test2.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/test5.js') }}"></script>
 
     <!-- EH: prototyping jquery ui calendar, talk to powerbi embed-->
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
