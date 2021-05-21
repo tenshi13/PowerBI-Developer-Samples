@@ -88,6 +88,9 @@ $(function () {
 
         $("div#reports").text("").append(select);
 
+        // let's load the first report by default
+        // set the selected option and trigger the change event
+        select.prop("selectedIndex", 0).change();
     }
 
     var load_selected_report = function(report_id) {
