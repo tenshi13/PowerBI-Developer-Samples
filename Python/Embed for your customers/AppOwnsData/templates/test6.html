@@ -46,10 +46,13 @@ Licensed under the MIT license.
                     </ol>
                 </p>
                 <p>
-                    <h2>testing 1 token for 2 reports</h2>
+                    <h2>Testing to talk to Ben's token resp api (fastapi)</h2>
                     <p style="font-size:12pt">
-                        - we're testing to get 1 token for accessing 2 reports <br />
-                        - will request token and show reports available
+                        - see https://github.com/intelematics/dac-api-insight-embed-token <br />
+                        - this service abstracts the powerbi api call to request client token
+                        - start the service on a different port - 5001
+                        - allow local host cors access see : https://fastapi.tiangolo.com/tutorial/cors/
+                        - this example just shows that we can get the token from a seperate service
                     </p>
                     <!-- EH: prototyping reports available -->
                     <div id="reports">Loading....</div>
