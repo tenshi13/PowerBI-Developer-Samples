@@ -97,8 +97,8 @@ $(function () {
             //     which tier user has access to?
             //     what reports are available on which tier?
             'report_ids' : [
+                    '38b2344a-482c-450a-8f64-3778c028f446', // compact_volume_nsw_monthly_lga_1.4.1
                     '11c08945-f1b0-4013-8fb8-daf93a8b4102', // expanded_volume_nsw_daily_lga_1.4.2
-                    //'4196546b-3e5c-4124-ad6c-b5a94636507b'  // expanded_volume_nsw_hourly_lga_1.4.0
                 ]
         }),
         contentType: "application/json; charset=utf-8",
