@@ -3,6 +3,7 @@
 
 from flask import current_app as app
 import msal
+import json
 
 class AadService:
 
@@ -36,6 +37,9 @@ class AadService:
 
                 # Make a client call if Access token is not available in cache
                 response = clientapp.acquire_token_for_client(scopes=app.config['SCOPE'])
+
+                print("Service principle token")
+                print(json.dumps(response, indent=4, sort_keys=True))
 
             try:
                 return response['access_token']
