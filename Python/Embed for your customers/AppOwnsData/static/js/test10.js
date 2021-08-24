@@ -261,16 +261,16 @@ $(function () {
          */
         let startDate = $('#start_date').val().toString();
         let endDate = $('#end_date').val().toString();
-        let startTime = $('#start_time').val().toString();
-        let endTime = $('#end_time').val().toString();
+        let startTime = parseInt($('#start_time').val().toString());
+        let endTime = parseInt($('#end_time').val().toString());
         let activeDays = [];
         $("input[name='day_of_week[]']:checked").each(function(){activeDays.push($(this).val().toString());});
 
-        console.log(startDate);
-        console.log(endDate);
-        console.log(startTime);
-        console.log(endTime);
-        console.log(activeDays);
+        // console.log(startDate);
+        // console.log(endDate);
+        // console.log(startTime);
+        // console.log(endTime);
+        // console.log(activeDays);
 
         slicers = await get_page_slicers();
         console.log("get_page_slicers");
@@ -278,15 +278,24 @@ $(function () {
 
         // date
         // Caveat: 
-        // we need to hard code the `T00:00:00.000Z` time portion into the dates
         // somehow powerbi doesnt respect the date format we have in powerbi report
         // we need to pass full date and time in ISO 8601 (UTC) datetime format
         // https://en.wikipedia.org/wiki/ISO_8601
         // e.g - 2021-08-23T03:39:39Z
-        timeFormat = "T00:00:00.000Z";
+        // console.log(startDate);
+        // console.log(endDate);
+
+        startDate = new Date(startDate).toISOString();
+
+        endDate = new Date(endDate);
+        endDate.setDate(endDate.getDate() + 1); // EH: add 1 day, I have no idea why this works
+        endDate = endDate.toISOString();
+
+        // console.log(startDate);
+        // console.log(endDate);
         dateFilter = getAdvancedAndFilter("Date Range 1", "Date", 
-                                              startDate+timeFormat, 
-                                              endDate+timeFormat
+                                              startDate, 
+                                              endDate
                                             );
         // should get the condition for reseting filter for date also
         // basically minDate and maxDate condition
@@ -301,6 +310,7 @@ $(function () {
         // hhmm
         // we have 96 X 15mins in 24 hours (24*4)
         // if startTime = 1 and endTime = 96, we should just clear the filter
+        // csonsole.log(endTime);
         if(startTime == 1 && endTime== 96 ) {
             // set slicer filter to empty array to remove filters
             await slicers['slicer1_hhmm'].setSlicerState({
